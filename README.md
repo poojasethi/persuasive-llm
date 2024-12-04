@@ -6,8 +6,8 @@ Planning persuasive dialog with LLMs using online policy learning such as Monte 
 
 Create the `chat_pomdp` conda environment.
 ```
-conda env create --name chat_pomdp --file=environments.yml
-conda activate chat_pomdp
+conda env create --name persuasive_llm --file=environment.yml
+conda activate persuasive_llm
 ```
 
 ## Agents
