@@ -11,10 +11,13 @@ conda activate persuasive_llm
 ```
 
 ## Agents
+Before running the agents, you will need to make sure to set your `OPENAI_API_KEY`. 
+```
+export OPENAI_API_KEY='sk-YOUR_KEY_HERE'
+```
 
 ### Baseline
-This agent does not do any planning. It greedily selects the best action to take next.
-
+This agent does not do any planning. It greedily selects the best action to take next based on the current user prompt.
 ```
 cd agents/
 python baseline_langchain.py
