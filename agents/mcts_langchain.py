@@ -13,16 +13,6 @@ api_key = os.environ.get("OPENAI_API_KEY")
 # Replace 'YOUR_OPENAI_API_KEY' with your actual API key
 llm = ChatOpenAI(api_key=api_key, temperature=0.7)
 
-# prompt = (
-#     "At your turn, please respond by choosing exactly one of the following actions: "
-#     "[present facts, ask a question, empathize, confirm common ground, or share a personal story. "
-#     "Before providing your response, also state which of the actions you chose. "
-#     "Answer in a conversationl manner and try to mirror the style and tone of the user while being respectful. "
-#     "Don't make your responses more than 3 sentences long. "
-#     "User: {user_input}\n"
-#     "Your Response: "
-# )
-
 prompt = """
 At your turn, please respond with the following information:
 
@@ -43,6 +33,9 @@ And here is the user's latest input:
 
 Given this context, please reply in the format described above.
 """
+
+# TODO: Create MDP: https://github.com/griffinbholt/decisionmaking-code-py/blob/main/src/ch07.py#L14
+# TODO: Import and use Monte Carlo Tree Search: https://github.com/griffinbholt/decisionmaking-code-py/blob/main/src/ch09.py
 
 def format_conversation_history(history: List[List[Union[str, Tuple[str, str, str]]]]) -> str:
     output = []
@@ -101,11 +94,9 @@ def start_persuasive_conversation(topic: str):
         print("Agent:\n", agent_response.content)
         print()
         num_turns += 1
-    
-    # TODO: Write the conversation history to a file.
-    pass
+
 
 if __name__ == "__main__":
     topic = "Everyone should adopt a plant-based diet for environmental reasons"
-    # topic = "Abortion should be legalized at a federal level."
+    topic = "Abortion should be legalized at a federal level."
     start_persuasive_conversation(topic)

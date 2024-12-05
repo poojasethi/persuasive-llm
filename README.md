@@ -4,7 +4,7 @@ Planning persuasive dialog with LLMs using online policy learning such as Monte 
 
 ## Setup
 
-Create the `chat_pomdp` conda environment.
+Create the `persuasive_llm` conda environment.
 ```
 conda env create --name persuasive_llm --file=environment.yml
 conda activate persuasive_llm
@@ -21,4 +21,11 @@ This agent does not do any planning. It greedily selects the best action to take
 ```
 cd agents/
 python baseline_langchain.py
+```
+
+### MCTS
+This agent plans the conversation actions ahead of time using MCTS.
+```
+cd agents/
+python mcts_langchain.py
 ```
