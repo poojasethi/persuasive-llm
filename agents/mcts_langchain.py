@@ -428,7 +428,8 @@ def start_persuasive_conversation(topic: str):
         num_turns += 1
         if action == "end conversation":
             conversation_ended = True
-    
+
+    print("*" * 50) 
     print(f"User final state: {state}") 
     print(f"Total rewards: {total_rewards}")
 
