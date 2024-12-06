@@ -1,8 +1,4 @@
-"""
-Chapter 7: Exact Solution Methods
-
-Code adapted from: https://github.com/griffinbholt/decisionmaking-code-py/blob/main/src/ch07.py
-"""
+"""Chapter 7: Exact Solution Methods"""
 
 import cvxpy as cp
 import numpy as np
@@ -10,7 +6,7 @@ import random
 import warnings
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable
+from typing import Any, Callable, Union, Optional
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -29,13 +25,14 @@ class MDP():
     TR: sample transition and reward. We will us `TR` later to sample the next
         state and reward given the current state and action: s_prime, r = TR(s, a)
     """
+
     def __init__(self,
                  gamma: float,
                  S: list[Any],
                  A: list[Any],
-                 T: Callable[[Any, Any, Any], float] | np.ndarray,
-                 R: Callable[[Any, Any], float] | np.ndarray,
-                 TR: Callable[[Any, Any], tuple[Any, float]] = None):
+                 T: Union[Callable[[Any, Any, Any], float] | np.ndarray],
+                 R: Union[Callable[[Any, Any], float] | np.ndarray],
+                 TR: Optional[Callable[[Any, Any], tuple[Any, float]]] = None):
         self.gamma = gamma  # discount factor
         self.S = S          # state space
         self.A = A          # action space
@@ -50,10 +47,11 @@ class MDP():
         # sample next state and reward given current state and action: s', r = TR(s, a)
         if type(T) == np.ndarray:
             self.T = lambda s, a, s_prime: T[s, a, s_prime]
-            self.TR = lambda s, a: (np.random.choice(len(self.S), p=T[s, a]), self.R(s, a)) if not np.all(T[s, a] == 0) else (np.random.choice(len(self.S)), self.R(s, a))
+            self.TR = lambda s, a: (np.random.choice(len(self.S), p=T[s, a]), self.R(
+                s, a)) if not np.all(T[s, a] == 0) else (np.random.choice(len(self.S)), self.R(s, a))
         else:
             self.T = T
-            self.TR = TR
+            # self.TR = TR
 
     def lookahead(self, U: Callable[[Any], float] | np.ndarray, s: Any, a: Any) -> float:
         if callable(U):
@@ -68,7 +66,8 @@ class MDP():
 
     def policy_evaluation(self, policy: Callable[[Any], Any]) -> np.ndarray:
         R_prime = np.array([self.R(s, policy(s)) for s in self.S])
-        T_prime = np.array([[self.T(s, policy(s), s_prime) for s_prime in self.S] for s in self.S])
+        T_prime = np.array([[self.T(s, policy(s), s_prime)
+                           for s_prime in self.S] for s in self.S])
         I = np.eye(len(self.S))
         return np.linalg.solve(I - self.gamma * T_prime, R_prime)
 
@@ -83,7 +82,8 @@ class MDP():
     def randstep(self, s: Any, a: Any) -> tuple[Any, float]:
         return self.TR(s, a)
 
-    def simulate(self, s: Any, policy: Callable[[Any], Any], d: int) -> list[tuple[Any, Any, float]]:  # TODO - Create test
+    # TODO - Create test
+    def simulate(self, s: Any, policy: Callable[[Any], Any], d: int) -> list[tuple[Any, Any, float]]:
         trajectory = []
         for _ in range(d):
             a = policy(s)
@@ -91,9 +91,51 @@ class MDP():
             trajectory.append((s, a, r))
             s = s_prime
         return trajectory
-    
+
     def random_policy(self):
         return lambda s, A=self.A: random.choices(A)[0]
+
+    def TR(self, state, action):
+        """
+        Sample next state, reward, and observation based on current state and action.
+
+        Args:
+            state (str): The current state.
+            action (str): The chosen action.
+
+        Returns:
+            next_state (str): The next state after taking the action.
+            reward (float): The reward for taking the action.
+            observation (str): The observation after taking the action.
+        """
+        # Sample the next state based on the transition probabilities
+        transition_probs = [
+            (self.T(state, action, next_state), next_state) for next_state in self.S]
+        next_state = self._sample_from_distribution(transition_probs)
+
+        # Sample the reward based on the reward function
+        reward = self.R(state, action)
+
+        return next_state, reward
+
+    def _sample_from_distribution(self, probs):
+        """
+        Helper function to sample a value based on a probability distribution.
+
+        Args:
+            probs (list of tuples): A list of (probability, value) pairs.
+
+        Returns:
+            value: A sample value based on the distribution.
+        """
+        # Generate a random number to sample a value from the distribution
+        r = random.random()
+        cumulative_prob = 0.0
+        for prob, value in probs:
+            cumulative_prob += prob
+            if r < cumulative_prob:
+                return value
+        return probs[-1][1]  # In case of rounding errors
 
 
 class ValueFunctionPolicy():
@@ -163,7 +205,8 @@ class LinearProgramFormulation(ExactSolutionMethod):
         S, A, R, T = self.numpyform(P)
         U = cp.Variable(len(S))
         objective = cp.Minimize(cp.sum(U))
-        constraints = [U[s] >= R[s, a] + P.gamma * (T[s, a] @ U) for s in S for a in A]
+        constraints = [U[s] >= R[s, a] + P.gamma *
+                       (T[s, a] @ U) for s in S for a in A]
         problem = cp.Problem(objective, constraints)
         problem.solve()
         return ValueFunctionPolicy(P, U.value)
@@ -173,18 +216,23 @@ class LinearProgramFormulation(ExactSolutionMethod):
         S_prime = np.arange(len(P.S))
         A_prime = np.arange(len(P.A))
         R_prime = np.array([[P.R(s, a) for a in P.A] for s in P.S])
-        T_prime = np.array([[[P.T(s, a, s_prime) for s_prime in S_prime] for a in P.A] for s in P.S])
+        T_prime = np.array(
+            [[[P.T(s, a, s_prime) for s_prime in S_prime] for a in P.A] for s in P.S])
         return S_prime, A_prime, R_prime, T_prime
 
 
 class LinearQuadraticProblem():
     def __init__(self, Ts: np.ndarray, Ta: np.ndarray, Rs: np.ndarray, Ra: np.ndarray, h_max: int):
-        assert np.all(np.linalg.eigvals(Rs) <= 0), "Rs must be NSD"  # TODO - not most numerically safe method
-        assert np.all(np.linalg.eigvals(Ra) < 0), "Ra must be ND"  # TODO - not most numerically safe method
+        # TODO - not most numerically safe method
+        assert np.all(np.linalg.eigvals(Rs) <= 0), "Rs must be NSD"
+        # TODO - not most numerically safe method
+        assert np.all(np.linalg.eigvals(Ra) < 0), "Ra must be ND"
         self.Ts = Ts        # transition matrix with respect to state
         self.Ta = Ta        # transition matrix with respect to action
-        self.Rs = Rs        # reward matrix with respect to state (negative semidefinite)
-        self.Ra = Ra        # reward matrix with respect to action (negative definite)
+        # reward matrix with respect to state (negative semidefinite)
+        self.Rs = Rs
+        # reward matrix with respect to action (negative definite)
+        self.Ra = Ra
         self.h_max = h_max  # horizon
 
     def solve(self) -> list[Callable[[np.ndarray], np.ndarray]]:
@@ -192,7 +240,8 @@ class LinearQuadraticProblem():
         V = np.zeros(self.Rs.shape)
         policies = [lambda s: np.zeros(self.Ta.shape[1])]
         for _ in range(1, self.h_max):
-            V = (Ts.T @ (V - (V @ Ta @ (np.linalg.inv(Ta.T @ V @ Ta + Ra) @ (Ta.T @ V)))) @ Ts) + Rs
+            V = (
+                Ts.T @ (V - (V @ Ta @ (np.linalg.inv(Ta.T @ V @ Ta + Ra) @ (Ta.T @ V)))) @ Ts) + Rs
             L = -np.linalg.inv(Ta.T @ V @ Ta + Ra) @ Ta.T @ V @ Ts
             policies.append(lambda s, L=L: L @ s)
         return policies

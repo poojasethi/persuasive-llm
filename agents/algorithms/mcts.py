@@ -9,7 +9,7 @@ import numpy as np
 from abc import abstractmethod
 from typing import Any, Callable
 
-from mdp import MDP, MDPSolutionMethod, ValueFunctionPolicy
+from .mdp import MDP, MDPSolutionMethod, ValueFunctionPolicy
 
 
 class OnlinePlanningMethod(MDPSolutionMethod):
