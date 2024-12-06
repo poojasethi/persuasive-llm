@@ -326,8 +326,6 @@ mdp = MDP(
     R=reward_model,
 )
 
-breakpoint()
-
 prompt = """
 At your turn, please respond with the following information:
 
@@ -399,6 +397,8 @@ def start_persuasive_conversation(topic: str):
 
     num_turns = 0
     conversation_ended = False
+    total_rewards = 0
+
     while not conversation_ended and num_turns < MAX_CONVERSATION_LENGTH:
         user_input = input("User: ")
         conversation_history.append(user_input)
@@ -419,12 +419,18 @@ def start_persuasive_conversation(topic: str):
         state, action, response = parse_agent_response(agent_response.content)
         conversation_history.append((state, action, response))
 
+        reward = reward_model(state, action)
+        total_rewards += reward
+
         print("Agent:\n", agent_response.content)
         print()
 
         num_turns += 1
         if action == "end conversation":
             conversation_ended = True
+    
+    print(f"User final state: {state}") 
+    print(f"Total rewards: {total_rewards}")
 
 def main():
     topic = "Everyone should adopt a plant-based diet for environmental reasons"
@@ -435,7 +441,6 @@ if __name__ == "__main__":
     main()
 
 
-# feedback: 
+# TA feedback: 
 # Accumulate rewards for both the baseline and improved agent
 # Qualitative feedback is good too
-# 
