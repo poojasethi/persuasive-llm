@@ -290,7 +290,7 @@ def utility_function(state: str):
         "disagree": -10,
         "slightly disagree": -5,
         "neutral": -1,
-        "slightly agree": 5,
+        "slightly agree": 1,
         "agree": 10,
     }
     return state_to_utility[state]
