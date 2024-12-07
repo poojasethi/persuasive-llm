@@ -8,10 +8,10 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Union, Optional
 
-warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
-class MDP():
+class MDP:
     """
     Data structure for a Markov Decision Process. In mathematical terms,
     MDPs are sometimes defined in terms of a tuple consisting of the various
@@ -26,16 +26,18 @@ class MDP():
         state and reward given the current state and action: s_prime, r = TR(s, a)
     """
 
-    def __init__(self,
-                 gamma: float,
-                 S: list[Any],
-                 A: list[Any],
-                 T: Union[Callable[[Any, Any, Any], float] | np.ndarray],
-                 R: Union[Callable[[Any, Any], float] | np.ndarray],
-                 TR: Optional[Callable[[Any, Any], tuple[Any, float]]] = None):
+    def __init__(
+        self,
+        gamma: float,
+        S: list[Any],
+        A: list[Any],
+        T: Union[Callable[[Any, Any, Any], float] | np.ndarray],
+        R: Union[Callable[[Any, Any], float] | np.ndarray],
+        TR: Optional[Callable[[Any, Any], tuple[Any, float]]] = None,
+    ):
         self.gamma = gamma  # discount factor
-        self.S = S          # state space
-        self.A = A          # action space
+        self.S = S  # state space
+        self.A = A  # action space
 
         # reward function R(s, a)
         if type(R) == np.ndarray:
@@ -47,18 +49,29 @@ class MDP():
         # sample next state and reward given current state and action: s', r = TR(s, a)
         if type(T) == np.ndarray:
             self.T = lambda s, a, s_prime: T[s, a, s_prime]
-            self.TR = lambda s, a: (np.random.choice(len(self.S), p=T[s, a]), self.R(
-                s, a)) if not np.all(T[s, a] == 0) else (np.random.choice(len(self.S)), self.R(s, a))
+            self.TR = lambda s, a: (
+                (np.random.choice(len(self.S), p=T[s, a]), self.R(s, a))
+                if not np.all(T[s, a] == 0)
+                else (np.random.choice(len(self.S)), self.R(s, a))
+            )
         else:
             self.T = T
             # self.TR = TR
 
-    def lookahead(self, U: Callable[[Any], float] | np.ndarray, s: Any, a: Any) -> float:
+    def lookahead(
+        self, U: Callable[[Any], float] | np.ndarray, s: Any, a: Any
+    ) -> float:
         if callable(U):
-            return self.R(s, a) + self.gamma * np.sum([self.T(s, a, s_prime) * U(s_prime) for s_prime in self.S])
-        return self.R(s, a) + self.gamma * np.sum([self.T(s, a, s_prime) * U[i] for i, s_prime in enumerate(self.S)])
+            return self.R(s, a) + self.gamma * np.sum(
+                [self.T(s, a, s_prime) * U(s_prime) for s_prime in self.S]
+            )
+        return self.R(s, a) + self.gamma * np.sum(
+            [self.T(s, a, s_prime) * U[i] for i, s_prime in enumerate(self.S)]
+        )
 
-    def iterative_policy_evaluation(self, policy: Callable[[Any], Any], k_max: int) -> np.ndarray:
+    def iterative_policy_evaluation(
+        self, policy: Callable[[Any], Any], k_max: int
+    ) -> np.ndarray:
         U = np.zeros(len(self.S))
         for _ in range(k_max):
             U = np.array([self.lookahead(U, s, policy(s)) for s in self.S])
@@ -66,12 +79,15 @@ class MDP():
 
     def policy_evaluation(self, policy: Callable[[Any], Any]) -> np.ndarray:
         R_prime = np.array([self.R(s, policy(s)) for s in self.S])
-        T_prime = np.array([[self.T(s, policy(s), s_prime)
-                           for s_prime in self.S] for s in self.S])
+        T_prime = np.array(
+            [[self.T(s, policy(s), s_prime) for s_prime in self.S] for s in self.S]
+        )
         I = np.eye(len(self.S))
         return np.linalg.solve(I - self.gamma * T_prime, R_prime)
 
-    def greedy(self, U: Callable[[Any], float] | np.ndarray, s: Any) -> tuple[float, Any]:
+    def greedy(
+        self, U: Callable[[Any], float] | np.ndarray, s: Any
+    ) -> tuple[float, Any]:
         expected_rewards = [self.lookahead(U, s, a) for a in self.A]
         idx = np.argmax(expected_rewards)
         return self.A[idx], expected_rewards[idx]
@@ -83,7 +99,9 @@ class MDP():
         return self.TR(s, a)
 
     # TODO - Create test
-    def simulate(self, s: Any, policy: Callable[[Any], Any], d: int) -> list[tuple[Any, Any, float]]:
+    def simulate(
+        self, s: Any, policy: Callable[[Any], Any], d: int
+    ) -> list[tuple[Any, Any, float]]:
         trajectory = []
         for _ in range(d):
             a = policy(s)
@@ -110,7 +128,8 @@ class MDP():
         """
         # Sample the next state based on the transition probabilities
         transition_probs = [
-            (self.T(state, action, next_state), next_state) for next_state in self.S]
+            (self.T(state, action, next_state), next_state) for next_state in self.S
+        ]
         next_state = self._sample_from_distribution(transition_probs)
 
         # Sample the reward based on the reward function
@@ -138,7 +157,7 @@ class MDP():
         return probs[-1][1]  # In case of rounding errors
 
 
-class ValueFunctionPolicy():
+class ValueFunctionPolicy:
     def __init__(self, P: MDP, U: Callable[[Any], float] | np.ndarray):
         self.P = P  # problem
         self.U = U  # utility function
@@ -205,8 +224,7 @@ class LinearProgramFormulation(ExactSolutionMethod):
         S, A, R, T = self.numpyform(P)
         U = cp.Variable(len(S))
         objective = cp.Minimize(cp.sum(U))
-        constraints = [U[s] >= R[s, a] + P.gamma *
-                       (T[s, a] @ U) for s in S for a in A]
+        constraints = [U[s] >= R[s, a] + P.gamma * (T[s, a] @ U) for s in S for a in A]
         problem = cp.Problem(objective, constraints)
         problem.solve()
         return ValueFunctionPolicy(P, U.value)
@@ -217,18 +235,21 @@ class LinearProgramFormulation(ExactSolutionMethod):
         A_prime = np.arange(len(P.A))
         R_prime = np.array([[P.R(s, a) for a in P.A] for s in P.S])
         T_prime = np.array(
-            [[[P.T(s, a, s_prime) for s_prime in S_prime] for a in P.A] for s in P.S])
+            [[[P.T(s, a, s_prime) for s_prime in S_prime] for a in P.A] for s in P.S]
+        )
         return S_prime, A_prime, R_prime, T_prime
 
 
-class LinearQuadraticProblem():
-    def __init__(self, Ts: np.ndarray, Ta: np.ndarray, Rs: np.ndarray, Ra: np.ndarray, h_max: int):
+class LinearQuadraticProblem:
+    def __init__(
+        self, Ts: np.ndarray, Ta: np.ndarray, Rs: np.ndarray, Ra: np.ndarray, h_max: int
+    ):
         # TODO - not most numerically safe method
         assert np.all(np.linalg.eigvals(Rs) <= 0), "Rs must be NSD"
         # TODO - not most numerically safe method
         assert np.all(np.linalg.eigvals(Ra) < 0), "Ra must be ND"
-        self.Ts = Ts        # transition matrix with respect to state
-        self.Ta = Ta        # transition matrix with respect to action
+        self.Ts = Ts  # transition matrix with respect to state
+        self.Ta = Ta  # transition matrix with respect to action
         # reward matrix with respect to state (negative semidefinite)
         self.Rs = Rs
         # reward matrix with respect to action (negative definite)
@@ -241,7 +262,10 @@ class LinearQuadraticProblem():
         policies = [lambda s: np.zeros(self.Ta.shape[1])]
         for _ in range(1, self.h_max):
             V = (
-                Ts.T @ (V - (V @ Ta @ (np.linalg.inv(Ta.T @ V @ Ta + Ra) @ (Ta.T @ V)))) @ Ts) + Rs
+                Ts.T
+                @ (V - (V @ Ta @ (np.linalg.inv(Ta.T @ V @ Ta + Ra) @ (Ta.T @ V))))
+                @ Ts
+            ) + Rs
             L = -np.linalg.inv(Ta.T @ V @ Ta + Ra) @ Ta.T @ V @ Ts
             policies.append(lambda s, L=L: L @ s)
         return policies
