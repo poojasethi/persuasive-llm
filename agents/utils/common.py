@@ -10,14 +10,14 @@ def reward_model(state: str, action: str) -> int:
             "share a personal story": 5,
             "end conversation": -10,
         }
-    elif state == "slighty disagree":
+    elif state == "slightly disagree":
         action_to_reward = {
             "present facts": 5,
             "ask a question": 7,
             "empathize": 10,
             "confirm common ground": 0,
             "share a personal story": 10,
-            "end conversation": -10,
+            "end conversation": -5,
         }
     elif state == "neutral":
         action_to_reward = {
@@ -35,7 +35,7 @@ def reward_model(state: str, action: str) -> int:
             "empathize": 2,
             "confirm common ground": 6,
             "share a personal story": 4,
-            "end conversation": 1,
+            "end conversation": 5,
         }
     elif state == "agree":
         action_to_reward = {

@@ -13,6 +13,12 @@ from utils.common import reward_model
 
 MAX_CONVERSATION_LENGTH = 10
 
+# Initialize OpenAI API key.
+api_key = os.environ.get("OPENAI_API_KEY")
+
+# Replace 'YOUR_OPENAI_API_KEY' with your actual API key
+llm = ChatOpenAI(api_key=api_key, temperature=0.7)
+
 GAMMA = 0.9
 STATES = ["disagree", "slightly disagree", "neutral", "slightly agree", "agree"]
 ACTIONS = [
@@ -73,7 +79,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "agree": 0.01,
             },
         }
-    elif state == "slighty disagree":
+    elif state == "slightly disagree":
         action_to_next_state_probability = {
             "present facts": {
                 "disagree": 0.10,
@@ -256,6 +262,9 @@ def transition_model(state: str, action: str, next_state: str) -> float:
     else:
         print(f"Unrecognized state: {state}")
 
+    if not action_to_next_state_probability: 
+        return ValueError()
+
     transition_probability = action_to_next_state_probability[action][next_state]
 
     return transition_probability
@@ -269,16 +278,59 @@ mdp = MDP(
     R=reward_model,
 )
 
-prompt = """
-At your turn, please respond with the following information:
+N = {}
+Q = {}
+d = 10
+m = 10
+c = 10
 
-1. Please predict how the user currently feels about the topic. Choose exactly one of: {states}
-2. Please choose precisely one of the following actions to take: {actions}
-3. Finally, please provide a response to the user consistent with your chosen action. Answer in a conversational manner and try to mirror the style and tone of the user while being respectful. Don't make your response more than 3 sentences long.
+
+def utility_function(state: str):
+    state_to_utility = {
+        "disagree": -10,
+        "slightly disagree": -5,
+        "neutral": -1,
+        "slightly agree": 5,
+        "agree": 10,
+    }
+    return state_to_utility[state]
+
+
+mcts = MonteCarloTreeSearch(
+    P=mdp,
+    N=N,
+    Q=Q,
+    d=d,
+    m=m,
+    c=c,
+    U=utility_function,
+)
+
+user_state_prompt = """
+Please predict how the user currently feels relative to you about the topic. Choose exactly one of: {states}
 
 The format of your response should look like below.
 User Current State: <predicted state>
-My Action: <your chosen action>
+
+Here is the prior conversation history:
+{conversation_history}
+
+And here is the user's latest input: 
+{user_input}
+
+Given this context, please reply in the format described above.
+"""
+
+prompt = """
+At your turn, please respond with the following information:
+
+1. You are given the user's current state on the topic. Here is their state: {state}
+2. You are given an action to follow. Here is the action: {action}
+3. Please provide a response to the user consistent with the given action. Answer in a conversational manner and try to mirror the style and tone of the user while being respectful. Don't make your response more than 3 sentences long.
+
+The format of your response should look like below.
+User Current State: <given state>
+My Action: <given action>
 My Response: <your response>
 
 Here is the prior conversation history:
@@ -312,6 +364,14 @@ def format_conversation_history(
     return "\n".join(output)
 
 
+def parse_user_state_agent_response(agent_response: str) -> str:
+    outputs = agent_response.split("\n")
+    assert len(outputs) == 1, "Expecting 1 partsto LLM output"
+    state = outputs[0].removeprefix("User Current State:").strip()
+
+    return state
+
+
 def parse_agent_response(agent_response: str) -> Tuple[str, str, str]:
     outputs = agent_response.split("\n")
     assert len(outputs) == 3, "Expecting 3 parts to LLM output"
@@ -327,6 +387,17 @@ def start_persuasive_conversation(topic: str):
     print(f"Agent: {opener}")
     conversation_history = []
     conversation_history.append(opener)
+
+    user_state_prompt_template = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                f"You are a persuasive agent. Your goal is to convince the human to agree with you on this issue: {topic}.",
+            ),
+            ("human", user_state_prompt),
+        ]
+    )
+    user_state_chain = user_state_prompt_template | llm
 
     prompt_template = ChatPromptTemplate.from_messages(
         [
@@ -348,19 +419,38 @@ def start_persuasive_conversation(topic: str):
         conversation_history.append(user_input)
         conversation_history_str = format_conversation_history(conversation_history)
 
-        agent_response = chain.invoke(
+        # Predict the user's current state.
+        user_state_agent_response = user_state_chain.invoke(
             {
                 "topic": topic,
                 "states": str(STATES),
-                "actions": str(ACTIONS),
+                "conversation_history": conversation_history_str,
+                "user_input": user_input,
+            }
+        )
+        state = parse_user_state_agent_response(user_state_agent_response.content)
+
+        # Use Monte Carlo Tree Search to select the next action given the current state.
+        action = mcts(state)
+
+        # Get the agent's response, given the state and selected optimal action.
+        agent_response = chain.invoke(
+            {
+                "topic": topic,
+                "state": state,
+                "action": action,
                 "conversation_history": conversation_history_str,
                 "user_input": user_input,
             }
         )
 
-        # TODO: Use Monte Carlo Tree Search to pick the next action:
-        # https://github.com/griffinbholt/decisionmaking-code-py/blob/main/src/ch09.py
-        state, action, response = parse_agent_response(agent_response.content)
+        parsed_state, parsed_action, response = parse_agent_response(
+            agent_response.content
+        )
+
+        assert state == parsed_state, "Provided state and parsed stated don't match"
+        assert action == parsed_action, "Provided action and parsed action don't match"
+
         conversation_history.append((state, action, response))
 
         reward = reward_model(state, action)
