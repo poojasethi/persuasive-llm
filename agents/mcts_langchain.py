@@ -8,80 +8,22 @@ from algorithms.mcts import MonteCarloTreeSearch
 
 from typing import List, Tuple, Dict, Union
 
+from utils.common import reward_model
+
 
 MAX_CONVERSATION_LENGTH = 10
 
-# Initialize OpenAI API key.
-api_key = os.environ.get("OPENAI_API_KEY")
-
-# Replace 'YOUR_OPENAI_API_KEY' with your actual API key
-llm = ChatOpenAI(api_key=api_key, temperature=0.7)
-
 GAMMA = 0.9
-
 STATES = ["disagree", "slightly disagree", "neutral", "slightly agree", "agree"]
-
 ACTIONS = [
     "present facts",
     "ask a question",
     "empathize",
     "confirm common ground",
     "share a personal story",
-    "end conversation"
+    "end conversation",
 ]
 
-def reward_model(state: str, action: str) -> int:
-    action_to_reward = {}
-
-    if state == "disagree":
-        action_to_reward = {
-            "present facts": 5,
-            "ask a question": 10,
-            "empathize": 15,
-            "confirm common ground": 0,
-            "share a personal story": 5,
-            "end conversation": -10,
-        }
-    elif state == "slighty disagree":
-        action_to_reward = {
-            "present facts": 5,
-            "ask a question": 7,
-            "empathize": 10,
-            "confirm common ground": 0,
-            "share a personal story": 10,
-            "end conversation": -10,
-        }
-    elif state == "neutral":
-        action_to_reward = {
-            "present facts": 4,
-            "ask a question": 3,
-            "empathize": 0,
-            "confirm common ground": 2,
-            "share a personal story": 3,
-            "end conversation": -1,
-        }
-    elif state == "slightly agree":
-        action_to_reward = {
-            "present facts": 3,
-            "ask a question": 2,
-            "empathize": 2,
-            "confirm common ground": 6,
-            "share a personal story": 4,
-            "end conversation": 1,
-        }
-    elif state == "agree":
-        action_to_reward = {
-            "present facts": 0,
-            "ask a question": 0,
-            "empathize": 0,
-            "confirm common ground": 7,
-            "share a personal story": 0,
-            "end conversation": 10,
-        }
-    else:
-        print(f"Unrecognized state: {state}")
-    
-    return action_to_reward[action]
 
 def transition_model(state: str, action: str, next_state: str) -> float:
     action_to_next_state_probability = {}
@@ -109,7 +51,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "slightly agree": 0.04,
                 "agree": 0.01,
             },
-            "confirm common ground":{
+            "confirm common ground": {
                 "disagree": 0.20,
                 "slightly disagree": 0.55,
                 "neutral": 0.20,
@@ -123,7 +65,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "slightly agree": 0.04,
                 "agree": 0.01,
             },
-            "end conversation":{
+            "end conversation": {
                 "disagree": 1.0,
                 "slightly disagree": 0.0,
                 "neutral": 0.0,
@@ -154,7 +96,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "slightly agree": 0.04,
                 "agree": 0.01,
             },
-            "confirm common ground":{
+            "confirm common ground": {
                 "disagree": 0.05,
                 "slightly disagree": 0.50,
                 "neutral": 0.40,
@@ -168,7 +110,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "slightly agree": 0.04,
                 "agree": 0.01,
             },
-            "end conversation":{
+            "end conversation": {
                 "disagree": 0.0,
                 "slightly disagree": 1.0,
                 "neutral": 0.0,
@@ -177,7 +119,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
             },
         }
     elif state == "neutral":
-         action_to_next_state_probability = {
+        action_to_next_state_probability = {
             "present facts": {
                 "disagree": 0.05,
                 "slightly disagree": 0.20,
@@ -199,7 +141,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "slightly agree": 0.10,
                 "agree": 0.0,
             },
-            "confirm common ground":{
+            "confirm common ground": {
                 "disagree": 0.0,
                 "slightly disagree": 0.0,
                 "neutral": 0.90,
@@ -213,7 +155,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "slightly agree": 0.30,
                 "agree": 0.05,
             },
-            "end conversation":{
+            "end conversation": {
                 "disagree": 0.0,
                 "slightly disagree": 0.0,
                 "neutral": 1.0,
@@ -222,7 +164,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
             },
         }
     elif state == "slightly agree":
-         action_to_next_state_probability = {
+        action_to_next_state_probability = {
             "present facts": {
                 "disagree": 0.0,
                 "slightly disagree": 0.01,
@@ -244,7 +186,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "slightly agree": 0.95,
                 "agree": 0.05,
             },
-            "confirm common ground":{
+            "confirm common ground": {
                 "disagree": 0.0,
                 "slightly disagree": 0.0,
                 "neutral": 0.0,
@@ -258,7 +200,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "slightly agree": 0.60,
                 "agree": 0.30,
             },
-            "end conversation":{
+            "end conversation": {
                 "disagree": 0.0,
                 "slightly disagree": 0.0,
                 "neutral": 0.0,
@@ -267,7 +209,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
             },
         }
     elif state == "agree":
-         action_to_next_state_probability = {
+        action_to_next_state_probability = {
             "present facts": {
                 "disagree": 0.0,
                 "slightly disagree": 0.0,
@@ -289,7 +231,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "slightly agree": 0.0,
                 "agree": 1.0,
             },
-            "confirm common ground":{
+            "confirm common ground": {
                 "disagree": 0.0,
                 "slightly disagree": 0.0,
                 "neutral": 0.0,
@@ -303,7 +245,7 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "slightly agree": 0.0,
                 "agree": 1.0,
             },
-            "end conversation":{
+            "end conversation": {
                 "disagree": 0.0,
                 "slightly disagree": 0.0,
                 "neutral": 0.0,
@@ -312,11 +254,12 @@ def transition_model(state: str, action: str, next_state: str) -> float:
             },
         }
     else:
-        print(f"Unrecognized state: {state}") 
+        print(f"Unrecognized state: {state}")
 
     transition_probability = action_to_next_state_probability[action][next_state]
-    
+
     return transition_probability
+
 
 mdp = MDP(
     gamma=GAMMA,
@@ -346,6 +289,7 @@ And here is the user's latest input:
 
 Given this context, please reply in the format described above.
 """
+
 
 def format_conversation_history(
     history: List[List[Union[str, Tuple[str, str, str]]]]
@@ -429,9 +373,10 @@ def start_persuasive_conversation(topic: str):
         if action == "end conversation":
             conversation_ended = True
 
-    print("*" * 50) 
-    print(f"User final state: {state}") 
+    print("*" * 50)
+    print(f"User final state: {state}")
     print(f"Total rewards: {total_rewards}")
+
 
 def main():
     topic = "Everyone should adopt a plant-based diet for environmental reasons"
@@ -442,6 +387,6 @@ if __name__ == "__main__":
     main()
 
 
-# TA feedback: 
+# TA feedback:
 # Accumulate rewards for both the baseline and improved agent
 # Qualitative feedback is good too
