@@ -17,15 +17,15 @@ export OPENAI_API_KEY='sk-YOUR_KEY_HERE'
 ```
 
 ### Baseline
-This agent does not do any planning. It greedily selects the best action to take next based on the current user prompt.
+This agent does not do any explicit planning. It selects the action to take using the LLM's predicted best action.
 ```
 cd agents/
-python baseline_langchain.py
+python baseline_agent.py
 ```
 
 ### MCTS
 This agent plans the conversation actions ahead of time using MCTS.
 ```
 cd agents/
-python mcts_langchain.py
+python mcts_agent.py
 ```
