@@ -14,7 +14,7 @@ MAX_CONVERSATION_LENGTH = 10
 api_key = os.environ.get("OPENAI_API_KEY")
 
 # Replace 'YOUR_OPENAI_API_KEY' with your actual API key
-llm = ChatOpenAI(api_key=api_key, temperature=0.7)
+llm = ChatOpenAI(model="gpt-4o-mini", api_key=api_key, temperature=0.3)
 
 # prompt = (
 #     "At your turn, please respond by choosing exactly one of the following actions: "
