@@ -75,8 +75,8 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "disagree": 1.0,
                 "slightly disagree": 0.0,
                 "neutral": 0.0,
-                "slightly agree": 0.04,
-                "agree": 0.01,
+                "slightly agree": 0.00,
+                "agree": 0.00,
             },
         }
     elif state == "slightly disagree":
