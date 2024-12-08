@@ -23,8 +23,15 @@ cd agents/
 python baseline_agent.py
 ```
 
-### MCTS
-This agent plans the conversation actions ahead of time using MCTS.
+### Sparse Sampling
+This agent plans its dialog actions ahead of time using Sparse Sampling.
+```
+cd agents/
+python sparse_sampling_agent.py
+```
+
+### Monte Carlo Tree Search (MCTS)
+This agent plans its dialog actions ahead of time using MCTS.
 ```
 cd agents/
 python mcts_agent.py

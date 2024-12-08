@@ -2,7 +2,7 @@ import os
 
 from langchain_core.prompts import ChatPromptTemplate
 
-from algorithms.online_planning import MonteCarloTreeSearch
+from algorithms.online_planning import SparseSampling
 
 from typing import List, Tuple, Dict, Union
 
@@ -55,27 +55,21 @@ Given this context, please reply in the format described above.
 """
 
 
-class MCTSAgent:
+class SpareSamplingAgent:
     def __init__(self, max_conversation_length: int = MAX_CONVERSATION_LENGTH):
         self.max_conversation_length = max_conversation_length
 
-    def init_mcts(self):
-        N = {}
-        Q = {}
-        d = 10
-        m = 10
-        c = 10
+    def init_sparse_sampling(self):
+        d = 3
+        m = 3
 
-        mcts = MonteCarloTreeSearch(
+        sparse_sampling = SparseSampling(
             P=mdp,
-            N=N,
-            Q=Q,
             d=d,
             m=m,
-            c=c,
             U=utility_function,
         )
-        return mcts
+        return sparse_sampling
 
     def start_persuasive_conversation(self, topic: str):
         opener = f'What are your thoughts on this topic: "{topic}"?'
@@ -108,7 +102,7 @@ class MCTSAgent:
         num_turns = 0
         conversation_ended = False
         total_rewards = 0
-        mcts = self.init_mcts()
+        sparse_sampling = self.init_sparse_sampling()
 
         while not conversation_ended and num_turns < self.max_conversation_length:
             user_input = input("User: ")
@@ -127,7 +121,7 @@ class MCTSAgent:
             state = parse_user_state_agent_response(user_state_agent_response.content)
 
             # Use Monte Carlo Tree Search to select the next action given the current state.
-            action = mcts(state)
+            action = sparse_sampling(state)
 
             # Get the agent's response, given the state and selected optimal action.
             agent_response = chain.invoke(
@@ -175,7 +169,7 @@ class MCTSAgent:
 
 
 def main(topic: str):
-    agent = MCTSAgent()
+    agent = SpareSamplingAgent()
     (
         user_state,
         total_rewards,

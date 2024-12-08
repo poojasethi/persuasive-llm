@@ -324,6 +324,17 @@ mdp = MDP(
     R=reward_model,
 )
 
+# Utility at leaves for oline planing methods.
+def utility_function(state: str):
+    state_to_utility = {
+        "disagree": -10,
+        "slightly disagree": -5,
+        "neutral": -1,
+        "slightly agree": 1,
+        "agree": 10,
+    }
+    return state_to_utility[state]
+
 ### Conversation Parsing ###
 def format_conversation_history(
     history: List[List[Union[str, Tuple[str, str, str]]]]
