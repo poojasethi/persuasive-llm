@@ -25,37 +25,38 @@ def main(topics: List[str]):
         "mcts": mcts_agent,
     }
 
-    user_name = input("What is your name?").strip()
+    user_name = input("What is your first name?\n").strip().lower()
     output_dir = Path(RESULTS_DIR) / user_name
     output_dir.mkdir(exist_ok=True)
 
-    for category, topic in topics.items():
-        print(f"Here's the cateogry: {category}")
+    for start_state in ["disagree", "neutral"]:
+        for category, topic in topics.items():
+            print(f"Here's the cateogry: {category}. For each topic, act like you initially {start_state} with the agent.")
 
-        for agent_type, agent in agents.items():
-            agent_dir = output_dir / agent_type
-            agent_dir.mkdir(exist_ok=True)
+            for agent_type, agent in agents.items():
+                agent_dir = output_dir / agent_type / start_state
+                agent_dir.mkdir(exist_ok=False)
 
-            results_file = agent_dir / f"{category}.txt"
+                results_file = agent_dir / f"{category}.txt"
 
-            print(f"Starting a conversation with the {agent_type} agent.\n")
-            (
-                user_state,
-                total_rewards,
-                num_turns,
-                conversation_history,
-                conversation_history_str,
-            ) = agent.start_persuasive_conversation(topic)
+                print(f"Starting a conversation with the {agent_type} agent.\n")
+                (
+                    user_state,
+                    total_rewards,
+                    num_turns,
+                    conversation_history,
+                    conversation_history_str,
+                ) = agent.start_persuasive_conversation(topic)
 
-            with open(results_file, "w") as fh:
-                fh.write(f"Topic: {topic}\n\n")
-                fh.write(f"Total Rewards: {total_rewards}\n")
-                fh.write(f"User Final State: {user_state}\n")
-                fh.write(f"Conversation Length: {num_turns}\n\n")
-                fh.write(f"Clean Conversation History:\n{conversation_history_str}\n\n")
-                fh.write(f"Full Conversation History:\n{conversation_history}\n\n")
+                with open(results_file, "w") as fh:
+                    fh.write(f"Topic: {topic}\n\n")
+                    fh.write(f"Total Rewards: {total_rewards}\n")
+                    fh.write(f"User Final State: {user_state}\n")
+                    fh.write(f"Conversation Length: {num_turns}\n\n")
+                    fh.write(f"Clean Conversation History:\n{conversation_history_str}\n\n")
+                    fh.write(f"Full Conversation History:\n{conversation_history}\n\n")
 
-            print(f"Wrote results to {results_file}\n")
+                print(f"Wrote results to {results_file}\n")
 
 
 if __name__ == "__main__":
