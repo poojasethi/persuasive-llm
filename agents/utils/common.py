@@ -3,7 +3,13 @@ import os
 from langchain_openai import ChatOpenAI
 from typing import List, Union, Tuple
 
-TOPICS = []
+TOPICS = {
+    "ethics": "Everyone should adopt a plant-based diet for environmental and health reasons.",
+    "culture" :"Taylor Swift is the best female artist of all-time.",
+    "politics": "The United States should offer universal health care (UHC) to improve the lives of its citizens.",
+    "education": "You should take CS 238: Decision Making Under Uncertainty with Professor Mykel Kochenderfer.",
+    "technology": "Artificial General Intelligence (AGI) will arrive within the next 10 years."
+}
 MAX_CONVERSATION_LENGTH = 10
 
 # Initialize OpenAI API key and LLM.
@@ -173,17 +179,17 @@ def transition_model(state: str, action: str, next_state: str) -> float:
     elif state == "neutral":
         action_to_next_state_probability = {
             "present facts": {
-                "disagree": 0.05,
-                "slightly disagree": 0.20,
-                "neutral": 0.40,
+                "disagree": 0.01,
+                "slightly disagree": 0.14,
+                "neutral": 0.50,
                 "slightly agree": 0.30,
                 "agree": 0.05,
             },
             "ask a question": {
                 "disagree": 0.0,
                 "slightly disagree": 0.0,
-                "neutral": 0.90,
-                "slightly agree": 0.10,
+                "neutral": 0.75,
+                "slightly agree": 0.25,
                 "agree": 0.0,
             },
             "empathize": {
