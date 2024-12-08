@@ -17,7 +17,7 @@ At your turn, please respond with the following information:
 
 1. Please predict how the user currently feels about the topic. Choose exactly one of: [disagree, slightly disagree, neutral, slightly agree, agree]
 2. Please choose precisely one of the following actions to take: [present facts, ask a question, empathize, confirm common ground, share a personal story, end conversation]
-3. Finally, please provide a response to the user consistent with your chosen action. Answer in a conversational manner and try to mirror the style and tone of the user while being respectful. Don't make your response more than 3 sentences long.
+3. Finally, please provide a response to the user consistent with your chosen action. Answer in a conversational manner and try to mirror the style and tone of the user while being respectful. Keep your response from 1 to 3 sentences long.
 
 The format of your response should look like below.
 User Current State: <predicted state>

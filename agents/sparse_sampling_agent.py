@@ -38,7 +38,7 @@ At your turn, please respond with the following information:
 
 1. You are given the user's current state on the topic. Here is their state: {state}
 2. You are given an action to follow. Here is the action: {action}
-3. Please provide a response to the user consistent with the given action. Answer in a conversational manner and try to mirror the style and tone of the user while being respectful. Don't make your response more than 3 sentences long.
+3. Please provide a response to the user consistent with the given action. Answer in a conversational manner and try to mirror the style and tone of the user while being respectful. Keep your response from 1 to 3 sentences long.
 
 The format of your response should look like below.
 User Current State: <given state>
