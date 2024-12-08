@@ -41,7 +41,7 @@ python mcts_agent.py
 To evaluate all of the agents on a set of pre-chosen topics, run the evaluation script.
 
 ```
-python evaluate_agents.py
+python agents/evaluate_agents.py
 ```
 
 Your conversations will be saved under the `results` directory.

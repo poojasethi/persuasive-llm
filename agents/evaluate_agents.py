@@ -11,10 +11,6 @@ import os
 RESULTS_DIR = "results/"
 
 
-def write_results():
-    pass
-
-
 def main(topics: List[str]):
     baseline_agent = BaselineAgent()
     sparse_sampling_agent = SpareSamplingAgent()
@@ -36,11 +32,11 @@ def main(topics: List[str]):
             for agent_type, agent in agents.items():
 
                 print(f"Starting a conversation with the {agent_type} agent.\n")
-                continue_convo = input(f"Would you like to perform this conversation or skip it?\n").strip().lower()
+                continue_convo = input(f"Would you like to have this conversation? ").strip().lower()
 
                 if continue_convo in ("yes", "y"):
                     agent_dir = output_dir / agent_type / start_state
-                    agent_dir.mkdir(exist_ok=False, parents=True)
+                    agent_dir.mkdir(exist_ok=True, parents=True)
 
                     results_file = agent_dir / f"{category}.txt"
                     (
