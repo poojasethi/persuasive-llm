@@ -31,32 +31,37 @@ def main(topics: List[str]):
 
     for start_state in ["disagree", "neutral"]:
         for category, topic in topics.items():
-            print(f"Here's the cateogry: {category}. For each topic, act like you initially {start_state} with the agent.")
+            print(f"Here's the category: {category}. For each topic, act like you initially {start_state} with the agent.")
 
             for agent_type, agent in agents.items():
-                agent_dir = output_dir / agent_type / start_state
-                agent_dir.mkdir(exist_ok=False)
-
-                results_file = agent_dir / f"{category}.txt"
 
                 print(f"Starting a conversation with the {agent_type} agent.\n")
-                (
-                    user_state,
-                    total_rewards,
-                    num_turns,
-                    conversation_history,
-                    conversation_history_str,
-                ) = agent.start_persuasive_conversation(topic)
+                continue_convo = input(f"Would you like to perform this conversation or skip it?\n").strip().lower()
 
-                with open(results_file, "w") as fh:
-                    fh.write(f"Topic: {topic}\n\n")
-                    fh.write(f"Total Rewards: {total_rewards}\n")
-                    fh.write(f"User Final State: {user_state}\n")
-                    fh.write(f"Conversation Length: {num_turns}\n\n")
-                    fh.write(f"Clean Conversation History:\n{conversation_history_str}\n\n")
-                    fh.write(f"Full Conversation History:\n{conversation_history}\n\n")
+                if continue_convo in ("yes", "y"):
+                    agent_dir = output_dir / agent_type / start_state
+                    agent_dir.mkdir(exist_ok=False, parents=True)
 
-                print(f"Wrote results to {results_file}\n")
+                    results_file = agent_dir / f"{category}.txt"
+                    (
+                        user_state,
+                        total_rewards,
+                        num_turns,
+                        conversation_history,
+                        conversation_history_str,
+                    ) = agent.start_persuasive_conversation(topic)
+
+                    with open(results_file, "w") as fh:
+                        fh.write(f"Topic: {topic}\n\n")
+                        fh.write(f"Total Rewards: {total_rewards}\n")
+                        fh.write(f"User Final State: {user_state}\n")
+                        fh.write(f"Conversation Length: {num_turns}\n\n")
+                        fh.write(f"Clean Conversation History:\n{conversation_history_str}\n\n")
+                        fh.write(f"Full Conversation History:\n{conversation_history}\n\n")
+
+                    print(f"Wrote results to {results_file}\n")
+                else:
+                    print(f"Skipping this conversation.")
 
 
 if __name__ == "__main__":
