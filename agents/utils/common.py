@@ -227,8 +227,8 @@ def transition_model(state: str, action: str, next_state: str) -> float:
                 "disagree": 0.0,
                 "slightly disagree": 0.01,
                 "neutral": 0.04,
-                "slightly agree": 0.45,
-                "agree": 0.50,
+                "slightly agree": 0.35,
+                "agree": 0.60,
             },
             "ask a question": {
                 "disagree": 0.0,
