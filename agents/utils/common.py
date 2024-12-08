@@ -35,7 +35,7 @@ def reward_model(state: str, action: str) -> int:
             "empathize": 2,
             "confirm common ground": 6,
             "share a personal story": 4,
-            "end conversation": 5,
+            "end conversation": 1,
         }
     elif state == "agree":
         action_to_reward = {
