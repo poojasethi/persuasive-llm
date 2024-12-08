@@ -36,3 +36,12 @@ This agent plans its dialog actions ahead of time using MCTS.
 cd agents/
 python mcts_agent.py
 ```
+
+## Evaluation
+To evaluate all of the agents on a set of pre-chosen topics, run the evaluation script.
+
+```
+python evaluate_agents.py
+```
+
+Your conversations will be saved under the `results` directory.
