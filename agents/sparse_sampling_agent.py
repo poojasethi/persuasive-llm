@@ -159,17 +159,21 @@ class SpareSamplingAgent:
         print(f"User final state: {state}")
         print(f"Total rewards: {total_rewards}")
 
+        full_conversation_history_str = format_conversation_history(
+            conversation_history, show_states_and_actions=True
+        )
+
         return (
             state,
             total_rewards,
             num_turns,
-            conversation_history,
+            full_conversation_history_str,
             conversation_history_str,
         )
 
 
 def main(topic: str):
-    agent = SpareSamplingAgent()
+    agent = SpareSamplingAgent(max_conversation_length=2)
     (
         user_state,
         total_rewards,
@@ -177,6 +181,7 @@ def main(topic: str):
         conversation_history,
         conversation_history_str,
     ) = agent.start_persuasive_conversation(topic)
+    breakpoint()
 
 
 if __name__ == "__main__":

@@ -165,11 +165,15 @@ class MCTSAgent:
         print(f"User final state: {state}")
         print(f"Total rewards: {total_rewards}")
 
+        full_conversation_history_str = format_conversation_history(
+            conversation_history, show_states_and_actions=True
+        )
+
         return (
             state,
             total_rewards,
             num_turns,
-            conversation_history,
+            full_conversation_history_str,
             conversation_history_str,
         )
 

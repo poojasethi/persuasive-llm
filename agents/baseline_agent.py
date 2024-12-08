@@ -9,7 +9,7 @@ from utils.common import (
     reward_model,
     format_conversation_history,
     parse_agent_response,
-    MAX_CONVERSATION_LENGTH
+    MAX_CONVERSATION_LENGTH,
 )
 
 prompt = """
@@ -62,8 +62,7 @@ class BaselineAgent:
         while not conversation_ended and num_turns < self.max_conversation_length:
             user_input = input("User: ")
             conversation_history.append(user_input)
-            conversation_history_str = format_conversation_history(
-                conversation_history)
+            conversation_history_str = format_conversation_history(conversation_history)
 
             agent_response = chain.invoke(
                 {
@@ -73,8 +72,7 @@ class BaselineAgent:
                 }
             )
 
-            state, action, response = parse_agent_response(
-                agent_response.content)
+            state, action, response = parse_agent_response(agent_response.content)
             conversation_history.append((state, action, response))
 
             reward = reward_model(state, action)
@@ -87,14 +85,19 @@ class BaselineAgent:
             if action == "end conversation":
                 conversation_ended = True
 
+        print("*" * 50)
         print(f"User final state: {state}")
         print(f"Total rewards: {total_rewards}")
+
+        full_conversation_history_str = format_conversation_history(
+            conversation_history, show_states_and_actions=True
+        )
 
         return (
             state,
             total_rewards,
             num_turns,
-            conversation_history,
+            full_conversation_history_str,
             conversation_history_str,
         )
 
@@ -105,7 +108,7 @@ def main(topic: str):
         user_state,
         total_rewards,
         num_turns,
-        conversation_history,
+        full_conversation_history_str,
         conversation_history_str,
     ) = agent.start_persuasive_conversation(topic)
 

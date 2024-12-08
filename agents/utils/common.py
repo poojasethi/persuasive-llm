@@ -343,14 +343,16 @@ def utility_function(state: str):
 
 ### Conversation Parsing ###
 def format_conversation_history(
-    history: List[List[Union[str, Tuple[str, str, str]]]]
+    history: List[List[Union[str, Tuple[str, str, str]]]], show_states_and_actions: bool = False,
 ) -> str:
     output = []
-    assert len(history) % 2 == 0
+    # assert len(history) % 2 == 0
 
     for i, row in enumerate(history):
         speaker = ""
         response = row
+
+        state, action = None, None
         if i % 2 == 0:  # Agent's turn
             speaker = "Agent"
             if type(row) != str:
@@ -358,7 +360,14 @@ def format_conversation_history(
         else:  # User's turn
             speaker = "User"
 
-        output.append(f"{speaker}: {response}")
+        if show_states_and_actions:
+            if state and action:
+                output.append(f"User Current State: {state}")
+                output.append(f"Agent Action: {action}\n")
+
+            output.append(f"{speaker}: {response}")
+        else:
+            output.append(f"{speaker}: {response}")
 
     return "\n".join(output)
 
